@@ -5,7 +5,7 @@
 */
 
 def valid_params = [
-    demultiplexers: ["bclconvert","bcl2fastq","bases2fastq","sgdemux"]
+    demultiplexers: ["bclconvert","bcl2fastq","bases2fastq","sgdemux","fqtk"]
 ]
 
 def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
@@ -22,6 +22,7 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+println(params.input)
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,8 +44,9 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { BCL_DEMULTIPLEX   } from '../subworkflows/nf-core/bcl_demultiplex/main'
-include { BASES_DEMULTIPLEX } from '../subworkflows/local/bases_demultiplex/main'
+include { BCL_DEMULTIPLEX      } from '../subworkflows/nf-core/bcl_demultiplex/main'
+include { BASES_DEMULTIPLEX    } from '../subworkflows/local/bases_demultiplex/main'
+include { FQTK_DEMULTIPLEX     } from '../subworkflows/local/fqtk_demultiplex/main'
 include { SINGULAR_DEMULTIPLEX } from '../subworkflows/local/singular_demultiplex/main'
 
 /*
@@ -73,9 +75,8 @@ include { MD5SUM                        } from '../modules/nf-core/md5sum/main'
 def multiqc_report = []
 
 workflow DEMULTIPLEX {
-
     // Value inputs
-    demultiplexer = params.demultiplexer                                   // string: bclconvert, bcl2fastq, bases2fastq, sgdemux
+    demultiplexer = params.demultiplexer                                   // string: bclconvert, bcl2fastq, bases2fastq, sgdemux, fqtk
     trim_fastq    = params.trim_fastq                                      // boolean: true, false
     skip_tools    = params.skip_tools ? params.skip_tools.split(',') : []  // list: [falco, fastp, multiqc]
 
@@ -111,7 +112,6 @@ workflow DEMULTIPLEX {
 
     // Merge the two channels back together
     ch_flowcells = ch_flowcells.dir.mix(ch_flowcells_tar_merged)
-
     //
     // RUN demultiplexing
     //
@@ -143,6 +143,23 @@ workflow DEMULTIPLEX {
             ch_raw_fastq = ch_raw_fastq.mix(SINGULAR_DEMULTIPLEX.out.fastq)
             ch_multiqc_files = ch_multiqc_files.mix(SINGULAR_DEMULTIPLEX.out.metrics.map { meta, metrics -> return metrics} )
             ch_versions = ch_versions.mix(SINGULAR_DEMULTIPLEX.out.versions)
+            break
+        case 'fqtk':
+            // MODULE: sgdemux
+            // Runs when "demultiplexer" is set to "fqtk"
+            fastqs = Channel
+                .from(file("https://raw.githubusercontent.com/fulcrumgenomics/nf-core-test-datasets/fqtk/testdata/sim-data/read_structure_manifest.csv", checkIfExists: true))
+                .splitCsv(header: true, skip: 0, strip: true )
+                .map{[it.fastq, it.read_structure]}
+            
+            fastqs_with_paths = fastqs.combine(
+                UNTAR.out.untar.collect{it[1]}
+            ).toList()
+
+            FQTK_DEMULTIPLEX ( ch_flowcells, fastqs_with_paths)
+            ch_raw_fastq = ch_raw_fastq.mix(FQTK_DEMULTIPLEX.out.fastq)
+            ch_multiqc_files = ch_multiqc_files.mix(FQTK_DEMULTIPLEX.out.metrics.map { meta, metrics -> return metrics} )
+            ch_versions = ch_versions.mix(FQTK_DEMULTIPLEX.out.versions)
             break
         default:
             exit 1, "Unknown demultiplexer: ${demultiplexer}"
@@ -238,7 +255,7 @@ def extract_csv(input_csv) {
             ],
             'samplesheet': [
                 'content': 'path',
-                'pattern': '^.*.csv$',
+                'pattern': '^.*.csv$|^.*.tsv$',
             ],
             'lane': [
                 'content': 'meta',
