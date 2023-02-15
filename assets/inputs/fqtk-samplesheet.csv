@@ -1,2 +1,2 @@
 id,samplesheet,lane,flowcell
-test,https://raw.githubusercontent.com/fulcrumgenomics/nf-core-test-datasets/fqtk/testdata/sim-data/fqtk_sample_metadata_subset.tsv,,https://github.com/fulcrumgenomics/nf-core-test-datasets/blob/fqtk/testdata/sim-data/fqtk_subset_fastqs.tar.gz?raw=true
+test,https://github.com/fulcrumgenomics/nf-core-test-datasets/raw/fqtk/testdata/sim-data/fqtk_sample_metadata_subset.tsv,,https://github.com/nf-core/test-datasets/raw/demultiplex/testdata/sim-data/fastq.tar.gz

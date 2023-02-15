@@ -155,8 +155,10 @@ workflow DEMULTIPLEX {
             fastqs_with_paths = fastqs.combine(
                 UNTAR.out.untar.collect{it[1]}
             ).toList()
-
-            FQTK_DEMULTIPLEX ( ch_flowcells, fastqs_with_paths)
+            
+            ch_input = ch_flowcells.merge( fastqs_with_paths ) { a,b -> tuple(a[0], a[1], b)}
+         
+            FQTK_DEMULTIPLEX ( ch_input )
             ch_raw_fastq = ch_raw_fastq.mix(FQTK_DEMULTIPLEX.out.fastq)
             ch_multiqc_files = ch_multiqc_files.mix(FQTK_DEMULTIPLEX.out.metrics.map { meta, metrics -> return metrics} )
             ch_versions = ch_versions.mix(FQTK_DEMULTIPLEX.out.versions)

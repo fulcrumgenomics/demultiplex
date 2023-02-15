@@ -10,14 +10,14 @@ workflow FQTK_DEMULTIPLEX {
     take:
         // Input fastq's must be bgzipped for compatibility with sgdemux
         // samplesheet.csv must be a two column csv = Sample_Barcode,Sample_ID)
-        ch_flowcell     // [[id:"", lane:""],samplesheet.csv, path/to/fastq/files]
-        fastqs_with_paths
+        //TODO fix name custom_input
+        custom_input     // [[id:"", lane:""],samplesheet.csv, path/to/fastq/files]
 
     main:
 
         // MODULE: fqtk
         // Demultiplex the bases files
-        FQTK( ch_flowcell , fastqs_with_paths )
+        FQTK( custom_input )
 
         // Generate meta for each fastq
         ch_fastq_with_meta = generate_fastq_meta(FQTK.out.sample_fastq)
