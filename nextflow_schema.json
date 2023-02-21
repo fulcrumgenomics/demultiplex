@@ -19,6 +19,14 @@
                 "skip_tools": {
                     "type": "string",
                     "default": null,
+                },
+                "fastq_files": {
+                    "type": "string",
+                    "default": null,
+                },
+                "read_structures": {
+                    "type": "string",
+                    "default": null,
                 }
             }
         },

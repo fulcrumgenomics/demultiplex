@@ -13,7 +13,8 @@ process FQTK {
     // [[<fastq name: string>, <read structure: string>, <path to fastqs: path>], [example_R1.fastq.gz, 150T, ./work/98/30bc..78y/fastqs/]]
 
     output:
-    tuple val(meta), path('output/*R*.fq.gz')                       , emit: sample_fastq
+    // Demultiplexed file name changes depending on the arg '--output-types'
+    tuple val(meta), path('output/*.fq.gz')                       , emit: sample_fastq
     tuple val(meta), path('output/demux-metrics.txt')               , emit: metrics
     tuple val(meta), path('output/unmatched*.fq.gz')                , emit: most_frequent_unmatched
     path "versions.yml"                                             , emit: versions
@@ -26,7 +27,9 @@ process FQTK {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def VERSION = '0.2.0'
+    // Join the absolute path from UNTAR.out.untar to the fastq file names
     fastqs = fastq_readstructure_pairs.collect{it[2]/it[0]}.join(" ")
+    // Create a list of read structures, Example: 8B 8B 150T
     read_structures = fastq_readstructure_pairs.collect{it[1]}.join(" ")
 
     """

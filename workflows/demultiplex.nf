@@ -24,6 +24,14 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 println(params.input)
 
+// Check that fqtk params are not comma separated
+if (params.fastq_files) { 
+    if (params.fastq_files.contains(',')) { exit 1, 'Fastq file list must not be comma separated: "--fastq_files file_R1.fq.gz file_R2.fq.gz..."' }
+    }
+
+if (params.read_structures) {
+    if (params.read_structures.contains(',')) { exit 1, 'Read structure list must not be comma separated: "--read_structures 8B 8B 150T..."' }
+}
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -112,7 +120,7 @@ workflow DEMULTIPLEX {
 
     // Merge the two channels back together
     ch_flowcells = ch_flowcells.dir.mix(ch_flowcells_tar_merged)
-    //
+
     // RUN demultiplexing
     //
     ch_raw_fastq = Channel.empty()
@@ -147,14 +155,15 @@ workflow DEMULTIPLEX {
         case 'fqtk':
             // MODULE: sgdemux
             // Runs when "demultiplexer" is set to "fqtk"
-            fastqs = Channel
-                .from(file("https://raw.githubusercontent.com/fulcrumgenomics/nf-core-test-datasets/fqtk/testdata/sim-data/read_structure_manifest.csv", checkIfExists: true))
-                .splitCsv(header: true, skip: 0, strip: true )
-                .map{[it.fastq, it.read_structure]}
-            
-            fastqs_with_paths = fastqs.combine(
-                UNTAR.out.untar.collect{it[1]}
-            ).toList()
+
+            // Split params into lists and put into channels 
+            ch_fastqs = Channel.from(params.fastq_files.split("\\s+"))
+            ch_read_structures = Channel.from(params.read_structures.split("\\s+"))
+
+            // Merge channel lists
+            fastqs = ch_fastqs.merge( ch_read_structures )
+
+            fastqs_with_paths = fastqs.combine(UNTAR.out.untar.collect{it[1]}).toList()
             
             ch_input = ch_flowcells.merge( fastqs_with_paths ) { a,b -> tuple(a[0], a[1], b)}
          
