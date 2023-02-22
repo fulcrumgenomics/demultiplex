@@ -32,6 +32,7 @@ DDMMYY_SERIAL_NUMBER_FC3,/path/to/SampleSheet3.csv,3,/path/to/sequencer/output3
 | `run_dir`     | Full path to the Illumina sequencer output directory or a `tar.gz` file containing the contents of said directory |
 
 An [example samplesheet](../assets/inputs/flowcell_input.csv) has been provided with the pipeline.
+Note `run_dir` must lead to a `tar.gz` for compatability with the demultiplexers sgdemux and fqtk
 
 ## Running the pipeline
 
@@ -40,6 +41,19 @@ The typical command for running the pipeline is as follows:
 ```console
 nextflow run nf-core/demultiplex --input samplesheet.csv --outdir <OUTDIR> -profile docker
 ```
+
+The typical command for running the pipeline with fqtk is as follows:
+
+```console
+nextflow run nf-core/demultiplex --input samplesheet.csv --outdir <OUTDIR>  --fastq_files <LIST OF FILE NAMES> --read_structures <LIST OF READ STRUCTURES> -profile docker
+```
+Where `--fastq_files` is a list of file names separated by one whitespace and `--read_structures` is a list of correlating read structures separated by one whitespace
+Example
+```console
+--fastq_files "sample_R1.fq.gz sample_R2.fq.gz sample_I1.fq.gz sample_I2.fq.gz"
+--read_structures "150T 150T 8B 8B"
+```
+
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
 
