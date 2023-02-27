@@ -41,20 +41,6 @@ The typical command for running the pipeline is as follows:
 ```console
 nextflow run nf-core/demultiplex --input samplesheet.csv --outdir <OUTDIR> -profile docker
 ```
-
-The typical command for running the pipeline with fqtk is as follows:
-
-```console
-nextflow run nf-core/demultiplex --input samplesheet.csv --outdir <OUTDIR>  --fastq_files <LIST OF FILE NAMES> --read_structures <LIST OF READ STRUCTURES> -profile docker
-```
-Where `--fastq_files` is a list of file names separated by one whitespace and `--read_structures` is a list of correlating read structures separated by one whitespace
-Example
-```console
---fastq_files "sample_R1.fq.gz sample_R2.fq.gz sample_I1.fq.gz sample_I2.fq.gz"
---read_structures "150T 150T 8B 8B"
-```
-
-
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
 
 Note that the pipeline will create the following files in your working directory:
@@ -64,6 +50,18 @@ work                # Directory containing the nextflow working files
 <OUTDIR>            # Finished results in specified location (defined with --outdir)
 .nextflow_log       # Log file from Nextflow
 # Other nextflow hidden files, eg. history of pipeline runs and old logs.
+```
+
+Additional params for running fqtk -> `--fastq_files` & `--read_structures`:
+```console
+nextflow run nf-core/demultiplex --input samplesheet.csv --outdir <OUTDIR>  --fastq_files <LIST OF FILE NAMES> --read_structures <LIST OF READ STRUCTURES> -profile docker
+```
+Where `--fastq_files` is a list of file names separated by one whitespace and `--read_structures` is a list of correlating read structures separated by one whitespace
+
+Example
+```console
+--fastq_files "sample_R1.fq.gz sample_R2.fq.gz sample_I1.fq.gz sample_I2.fq.gz"
+--read_structures "150T 150T 8B 8B"
 ```
 
 ### Updating the pipeline
