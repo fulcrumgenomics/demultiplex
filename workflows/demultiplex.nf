@@ -268,7 +268,7 @@ workflow.onComplete {
 def extract_csv(input_csv) {
 
     // Flowcell Sheet schema
-    // Possible values for the "content" column: [meta, path, number, string, bool, none]
+    // Possible values for the "content" column: [meta, path, number, string, bool]
     def input_schema = [
         'columns': [
             'id': [
@@ -278,7 +278,7 @@ def extract_csv(input_csv) {
             ],
             'samplesheet': [
                 'content': 'path',
-                'pattern': '^.*.csv$|^.*.tsv$',
+                'pattern': '^.*.csv$',
             ],
             'lane': [
                 'content': 'meta',
@@ -364,6 +364,21 @@ def extract_csv(input_csv) {
         return output
     })
 }
+
+// Parse flowcell input map
+def parse_flowcell_csv(row) {
+    def meta = [:]
+    meta.id   = row.id.toString()
+    meta.lane = null
+    if (row.containsKey("lane") && row.lane ) {
+        meta.lane = row.lane.toInteger()
+    }
+
+    def flowcell        = file(row.flowcell, checkIfExists: true)
+    def samplesheet     = file(row.samplesheet, checkIfExists: true)
+    return [meta, samplesheet, flowcell]
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     FUNCTIONS FOR FQTK
@@ -374,7 +389,7 @@ def extract_csv(input_csv) {
 def extract_csv_fqtk(input_csv) {
 
     // Flowcell Sheet schema
-    // Possible values for the "content" column: [meta, path, number, string, bool, none]
+    // Possible values for the "content" column: [meta, path, number, string, bool]
     def input_schema = [
         'columns': [
             'id': [
@@ -384,7 +399,7 @@ def extract_csv_fqtk(input_csv) {
             ],
             'samplesheet': [
                 'content': 'path',
-                'pattern': '^.*.csv$|^.*.tsv$',
+                'pattern': '^.*.csv$',
             ],
             'lane': [
                 'content': 'meta',
@@ -400,7 +415,7 @@ def extract_csv_fqtk(input_csv) {
                 'pattern': '',
             ]
         ],
-        required: ['id','flowcell', 'samplesheet'],
+        required: ['id','flowcell', 'samplesheet', 'per_flowcell_manifest'],
     ]
 
     // Don't change these variables
@@ -473,21 +488,6 @@ def extract_csv_fqtk(input_csv) {
         output.add(0, meta)
         return output
     })
-}
-
-
-// Parse flowcell input map
-def parse_flowcell_csv(row) {
-    def meta = [:]
-    meta.id   = row.id.toString()
-    meta.lane = null
-    if (row.containsKey("lane") && row.lane ) {
-        meta.lane = row.lane.toInteger()
-    }
-
-    def flowcell              = file(row.flowcell, checkIfExists: true)
-    def samplesheet           = file(row.samplesheet, checkIfExists: true)
-    return [flowcell, samplesheet, meta]
 }
 
 /*
