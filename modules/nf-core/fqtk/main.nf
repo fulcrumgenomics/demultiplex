@@ -2,13 +2,13 @@ process FQTK {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "bioconda::fqtk=0.2.0"
+    conda "bioconda::fqtk=0.2.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/fqtk:0.2.0--h9f5acd7_0' :
-        'quay.io/biocontainers/fqtk:0.2.0--h9f5acd7_0' }"
+        'https://depot.galaxyproject.org/singularity/fqtk:0.2.1--h9f5acd7_0' :
+        'quay.io/biocontainers/fqtk:0.2.1--h9f5acd7_0' }"
 
     input:
-    tuple val(meta), path(sample_sheet), val(fastq_readstructure_pairs) 
+    tuple val(meta), path(sample_sheet), val(fastq_readstructure_pairs)
     // fastq_readstructure_pairs example:
     // [[<fastq name: string>, <read structure: string>, <path to fastqs: path>], [example_R1.fastq.gz, 150T, ./work/98/30bc..78y/fastqs/]]
 
@@ -26,7 +26,6 @@ process FQTK {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def VERSION = '0.2.0'
     // Join the absolute path from UNTAR.out.untar to the fastq file names
     fastqs = fastq_readstructure_pairs.collect{it[2]/it[0]}.join(" ")
     // Create a list of read structures, Example: 8B 8B 150T
@@ -38,13 +37,12 @@ process FQTK {
         demux \\
             --inputs ${fastqs} \\
             --read-structures ${read_structures} \\
-            --output-types T \\
             --output output/ \\
             --sample-metadata ${sample_sheet} \\
             ${args}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        fqtk: $VERSION
-    END_VERSIONS
+        fqtk: \$(echo \$(fqtk --version 2>&1) | cut -d " " -f2)
     """
 }
+

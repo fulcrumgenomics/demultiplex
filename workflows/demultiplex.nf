@@ -22,16 +22,6 @@ for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true
 
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
-println(params.input)
-
-// Check that fqtk params are not comma separated
-if (params.fastq_files) { 
-    if (params.fastq_files.contains(',')) { exit 1, 'Fastq file list must not be comma separated: "--fastq_files file_R1.fq.gz file_R2.fq.gz..."' }
-    }
-
-if (params.read_structures) {
-    if (params.read_structures.contains(',')) { exit 1, 'Read structure list must not be comma separated: "--read_structures 8B 8B 150T..."' }
-}
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -95,22 +85,44 @@ workflow DEMULTIPLEX {
     ch_multiqc_files = Channel.empty()
 
     // Sanitize inputs and separate input types
-    ch_inputs = extract_csv(ch_input)
-    ch_inputs.dump(tag: 'DEMULTIPLEX::inputs',{FormattingService.prettyFormat(it)})
+    // FQTK's input contains an extra column 'per_flowcell_manifest' so it is handled seperately
+    if (demultiplexer == 'fqtk'){
+        ch_inputs = extract_csv_fqtk(ch_input)
 
-    // Split flowcells into separate channels containg run as tar and run as path
-    // https://nextflow.slack.com/archives/C02T98A23U7/p1650963988498929
-    ch_flowcells = ch_inputs
-        .branch { meta, samplesheet, run ->
-            tar: run.toString().endsWith('.tar.gz')
-            dir: true
-        }
+        ch_inputs.dump(tag: 'DEMULTIPLEX::inputs',{FormattingService.prettyFormat(it)})
 
-    ch_flowcells_tar = ch_flowcells.tar
-        .multiMap { meta, samplesheet, run ->
-            samplesheets: [ meta, samplesheet ]
-            run_dirs: [ meta, run ]
-        }
+        // Split flowcells into separate channels containg run as tar and run as path
+        // https://nextflow.slack.com/archives/C02T98A23U7/p1650963988498929
+        ch_flowcells = ch_inputs
+            .branch { meta, samplesheet, run, manifest ->
+                tar: run.toString().endsWith('.tar.gz')
+                dir: true
+            }
+
+        ch_flowcells_tar = ch_flowcells.tar
+            .multiMap { meta, samplesheet, run, manifest ->
+                samplesheets: [ meta, samplesheet, manifest ]
+                run_dirs: [ meta, run ]
+            }
+    }
+    else{
+        ch_inputs = extract_csv(ch_input)
+        ch_inputs.dump(tag: 'DEMULTIPLEX::inputs',{FormattingService.prettyFormat(it)})
+
+        // Split flowcells into separate channels containg run as tar and run as path
+        // https://nextflow.slack.com/archives/C02T98A23U7/p1650963988498929
+        ch_flowcells = ch_inputs
+            .branch { meta, samplesheet, run ->
+                tar: run.toString().endsWith('.tar.gz')
+                dir: true
+            }
+
+        ch_flowcells_tar = ch_flowcells.tar
+            .multiMap { meta, samplesheet, run ->
+                samplesheets: [ meta, samplesheet ]
+                run_dirs: [ meta, run ]
+            } 
+    }
 
     // MODULE: untar
     // Runs when run_dir is a tar archive
@@ -156,17 +168,15 @@ workflow DEMULTIPLEX {
             // MODULE: sgdemux
             // Runs when "demultiplexer" is set to "fqtk"
 
-            // Split params into lists and put into channels 
-            ch_fastqs = Channel.from(params.fastq_files.split("\\s+"))
-            ch_read_structures = Channel.from(params.read_structures.split("\\s+"))
-
-            // Merge channel lists
-            fastqs = ch_fastqs.merge( ch_read_structures )
-
-            fastqs_with_paths = fastqs.combine(UNTAR.out.untar.collect{it[1]}).toList()
+            // Collect fastqs and read structures
+            fastq_read_structure = ch_flowcells.map{it[2]}
+                .splitCsv(header:true)
+                .map{[it.fastq, it.read_structure]}
+            
+            fastqs_with_paths = fastq_read_structure.combine(UNTAR.out.untar.collect{it[1]}).toList()
             
             ch_input = ch_flowcells.merge( fastqs_with_paths ) { a,b -> tuple(a[0], a[1], b)}
-         
+
             FQTK_DEMULTIPLEX ( ch_input )
             ch_raw_fastq = ch_raw_fastq.mix(FQTK_DEMULTIPLEX.out.fastq)
             ch_multiqc_files = ch_multiqc_files.mix(FQTK_DEMULTIPLEX.out.metrics.map { meta, metrics -> return metrics} )
@@ -251,12 +261,11 @@ workflow.onComplete {
     FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
 // Extract information (meta data + file(s)) from csv file(s)
 def extract_csv(input_csv) {
 
     // Flowcell Sheet schema
-    // Possible values for the "content" column: [meta, path, number, string, bool]
+    // Possible values for the "content" column: [meta, path, number, string, bool, none]
     def input_schema = [
         'columns': [
             'id': [
@@ -277,7 +286,116 @@ def extract_csv(input_csv) {
                 'content': 'path',
                 'pattern': '',
             ],
+        ],
+        required: ['id','flowcell', 'samplesheet'],
+    ]
 
+    // Don't change these variables
+    def row_count = 1
+    def all_columns = input_schema.columns.keySet().collect()
+    def mandatory_columns = input_schema.required
+
+    // Header checks
+    Channel.value(input_csv).splitCsv(strip:true).first().map({ row ->
+
+        if(row != all_columns) {
+            def commons = all_columns.intersect(row)
+            def diffs = all_columns.plus(row)
+            diffs.removeAll(commons)
+
+            if(diffs.size() > 0){
+                def missing_columns = []
+                def wrong_columns = []
+                for(diff : diffs){
+                    diff in all_columns ? missing_columns.add(diff) : wrong_columns.add(diff)
+                }
+                if(missing_columns.size() > 0){
+                    exit 1, "[Samplesheet Error] The column(s) $missing_columns is/are not present. The header should look like: $all_columns"
+                }
+                else {
+                    exit 1, "[Samplesheet Error] The column(s) $wrong_columns should not be in the header. The header should look like: $all_columns"
+                }
+            }
+            else {
+                exit 1, "[Samplesheet Error] The columns $row are not in the right order. The header should look like: $all_columns"
+            }
+
+        }
+    })
+
+    // Field checks + returning the channels
+    Channel.value(input_csv).splitCsv(header:true, strip:true).map({ row ->
+
+        row_count++
+
+        // Check the mandatory columns
+        def missing_mandatory_columns = []
+        for(column : mandatory_columns) {
+            row[column] ?: missing_mandatory_columns.add(column)
+        }
+        if(missing_mandatory_columns.size > 0){
+            exit 1, "[Samplesheet Error] The mandatory column(s) $missing_mandatory_columns is/are empty on line $row_count"
+        }
+
+        def output = []
+        def meta = [:]
+        for(col : input_schema.columns) {
+            key = col.key
+            content = row[key]
+
+            if(!(content ==~ col.value['pattern']) && col.value['pattern'] != '' && content != '') {
+                exit 1, "[Samplesheet Error] The content of column '$key' on line $row_count does not match the pattern '${col.value['pattern']}'"
+            }
+
+            if(col.value['content'] == 'path'){
+                output.add(content ? file(content, checkIfExists:true) : col.value['default'] ?: [])
+            }
+            else if(col.value['content'] == 'meta'){
+                for(meta_name : col.value['meta_name'].split(",")){
+                    meta[meta_name] = content != '' ? content.replace(' ', '_') : col.value['default'] ?: null
+                }
+            }
+        }
+
+        output.add(0, meta)
+        return output
+    })
+}
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    FUNCTIONS FOR FQTK
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// Extract information (meta data + file(s)) from csv file(s)
+def extract_csv_fqtk(input_csv) {
+
+    // Flowcell Sheet schema
+    // Possible values for the "content" column: [meta, path, number, string, bool, none]
+    def input_schema = [
+        'columns': [
+            'id': [
+                'content': 'meta',
+                'meta_name': 'id',
+                'pattern': '',
+            ],
+            'samplesheet': [
+                'content': 'path',
+                'pattern': '^.*.csv$|^.*.tsv$',
+            ],
+            'lane': [
+                'content': 'meta',
+                'meta_name': 'lane',
+                'pattern': '',
+            ],
+            'flowcell': [
+                'content': 'path',
+                'pattern': '',
+            ],
+            'per_flowcell_manifest': [
+                'content': 'path',
+                'pattern': '',
+            ]
         ],
         required: ['id','flowcell', 'samplesheet'],
     ]
@@ -354,6 +472,7 @@ def extract_csv(input_csv) {
     })
 }
 
+
 // Parse flowcell input map
 def parse_flowcell_csv(row) {
     def meta = [:]
@@ -363,9 +482,9 @@ def parse_flowcell_csv(row) {
         meta.lane = row.lane.toInteger()
     }
 
-    def flowcell        = file(row.flowcell, checkIfExists: true)
-    def samplesheet     = file(row.samplesheet, checkIfExists: true)
-    return [meta, samplesheet, flowcell]
+    def flowcell              = file(row.flowcell, checkIfExists: true)
+    def samplesheet           = file(row.samplesheet, checkIfExists: true)
+    return [flowcell, samplesheet, meta]
 }
 
 /*
