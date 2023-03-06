@@ -37,7 +37,7 @@ An [example samplesheet](../assets/inputs/flowcell_input.csv) has been provided 
 
 Note `run_dir` must lead to a `tar.gz` for compatability with the demultiplexers sgdemux and fqtk
 
-Please see the following examples to format `SampleSheet.csv` for [sgdemux](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/out.sample_meta.csv) and [fqtk](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/fqtk_sample_metadata_subset.tsv)
+Please see the following examples to format `SampleSheet.csv` for [sgdemux](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/out.sample_meta.csv) and [fqtk](https://github.com/fulcrumgenomics/nf-core-test-datasets/raw/fqtk/testdata/sim-data/fqtk_samplesheet.csv)
 
 ### Samplesheet for fqtk
 
