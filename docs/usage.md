@@ -19,7 +19,7 @@ You will need to create a samplesheet with information about the samples you wou
 ```console
 id,samplesheet,lane,flowcell
 DDMMYY_SERIAL_NUMBER_FC,/path/to/SampleSheet.csv,1,/path/to/sequencer/output
-DDMMYY_SERIAL_NUMBER_FC,/path/to/SampleSheet.csv,2,/path/to/sequencer/output
+DDMMYY_SERIAL_NUMBER_FC,/path/to/SampleSheet1.csv,2,/path/to/sequencer/output
 DDMMYY_SERIAL_NUMBER_FC2,/path/to/SampleSheet2.csv,1,/path/to/sequencer/output2
 DDMMYY_SERIAL_NUMBER_FC3,/path/to/SampleSheet3.csv,3,/path/to/sequencer/output3
 ```
@@ -33,6 +33,24 @@ DDMMYY_SERIAL_NUMBER_FC3,/path/to/SampleSheet3.csv,3,/path/to/sequencer/output3
 
 An [example samplesheet](../assets/inputs/flowcell_input.csv) has been provided with the pipeline.
 Note `run_dir` must lead to a `tar.gz` for compatability with the demultiplexers sgdemux and fqtk
+
+### Samplesheet for fqtk
+
+```console
+id,samplesheet,lane,flowcell,per_flowcell_manifest
+DDMMYY_SERIAL_NUMBER_FC,/path/to/SampleSheet.csv,1,/path/to/sequencer/output,/path/to/flowcell/manifest.csv
+DDMMYY_SERIAL_NUMBER_FC,/path/to/SampleSheet1.csv,2,/path/to/sequencer/output,/path/to/flowcell/manifest1.csv
+DDMMYY_SERIAL_NUMBER_FC2,/path/to/SampleSheet2.csv,1,/path/to/sequencer/output2,/path/to/flowcell/manifest2.csv
+DDMMYY_SERIAL_NUMBER_FC3,/path/to/SampleSheet3.csv,3,/path/to/sequencer/output3,/path/to/flowcell/manifest3.csv
+```
+
+| Column                  | Description                                                                                                       |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `flowcell`              | flowcell id                                                                                                       |
+| `samplesheet`           | Full path to the `SampleSheet.csv` file containing the sample information and indexes                             |
+| `lane`                  | Optional lane number. When a lane number is provided, only the given lane will be demultiplexed                   |
+| `run_dir`               | Full path to the Illumina sequencer output directory or a `tar.gz` file containing the contents of said directory |
+| `per_flowcell_manifest` | Full path to the flowcell manifest, containing the fastq file names and read structures                           |
 
 ## Running the pipeline
 
@@ -50,18 +68,6 @@ work                # Directory containing the nextflow working files
 <OUTDIR>            # Finished results in specified location (defined with --outdir)
 .nextflow_log       # Log file from Nextflow
 # Other nextflow hidden files, eg. history of pipeline runs and old logs.
-```
-
-Additional params for running fqtk -> `--fastq_files` & `--read_structures`:
-```console
-nextflow run nf-core/demultiplex --input samplesheet.csv --outdir <OUTDIR>  --fastq_files <LIST OF FILE NAMES> --read_structures <LIST OF READ STRUCTURES> -profile docker
-```
-Where `--fastq_files` is a list of file names separated by one whitespace and `--read_structures` is a list of correlating read structures separated by one whitespace
-
-Example
-```console
---fastq_files "sample_R1.fq.gz sample_R2.fq.gz sample_I1.fq.gz sample_I2.fq.gz"
---read_structures "150T 150T 8B 8B"
 ```
 
 ### Updating the pipeline
