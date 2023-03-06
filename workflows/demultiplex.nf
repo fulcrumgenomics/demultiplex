@@ -79,13 +79,12 @@ workflow DEMULTIPLEX {
     skip_tools    = params.skip_tools ? params.skip_tools.split(',') : []  // list: [falco, fastp, multiqc]
 
     // Channel inputs
-
-
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
     // Sanitize inputs and separate input types
     // FQTK's input contains an extra column 'per_flowcell_manifest' so it is handled seperately
+    // For reference - assets/inputs/fqtk-samplesheet.csv vs assets/inputs/sgdemux-samplesheet
     if (demultiplexer == 'fqtk'){
         ch_inputs = extract_csv_fqtk(ch_input)
 
@@ -168,13 +167,17 @@ workflow DEMULTIPLEX {
             // MODULE: sgdemux
             // Runs when "demultiplexer" is set to "fqtk"
 
-            // Collect fastqs and read structures
+            // Collect fastqs and read structures from field 2 of ch_flowcells
             fastq_read_structure = ch_flowcells.map{it[2]}
                 .splitCsv(header:true)
                 .map{[it.fastq, it.read_structure]}
             
+            // Combine the directory containing the fastq with the fastq name and read structure
+            // [example_R1.fastq.gz, 150T, ./work/98/30bc..78y/fastqs/]
             fastqs_with_paths = fastq_read_structure.combine(UNTAR.out.untar.collect{it[1]}).toList()
             
+            // Format ch_input like so:
+            // [[meta:id], <path to sample names and barcodes in tsv: path>, [<fastq name: string>, <read structure: string>, <path to fastqs: path>]]]
             ch_input = ch_flowcells.merge( fastqs_with_paths ) { a,b -> tuple(a[0], a[1], b)}
 
             FQTK_DEMULTIPLEX ( ch_input )
