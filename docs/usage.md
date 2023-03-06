@@ -10,6 +10,8 @@
 
 You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
 
+When using the demultiplexer fqtk, the samplesheet must contain an additional column 'per_flowcell_metadata'. The sample sheet referenced in column two of the input sample sheet must be formatted according to the demultiplexer. For sgdemux see the example [here](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/out.sample_meta.csv), and for fqtk see the example [here](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/fqtk_sample_metadata_subset.tsv)
+
 ```bash
 --input '[path to samplesheet file]'
 ```
