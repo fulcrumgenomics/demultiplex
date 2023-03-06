@@ -10,7 +10,7 @@
 
 You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
 
-When using the demultiplexer fqtk, the samplesheet must contain an additional column 'per_flowcell_manifest'. The column `per_flowcell_manifest` must contain two headers 'fastq' and read_structure' please follow [this link](https://github.com/fulcrumgenomics/nf-core-test-datasets/blob/fqtk/testdata/sim-data/per_flowcell_manifest.csv) for an example. fqtk_sample_metadata_subset.tsv)
+When using the demultiplexer fqtk, the samplesheet must contain an additional column `per_flowcell_manifest`. The column `per_flowcell_manifest` must contain two headers `fastq` and `read_structure` please follow [this link](https://github.com/fulcrumgenomics/nf-core-test-datasets/blob/fqtk/testdata/sim-data/per_flowcell_manifest.csv) for an example.
 
 ```bash
 --input '[path to samplesheet file]'
@@ -36,7 +36,8 @@ DDMMYY_SERIAL_NUMBER_FC3,/path/to/SampleSheet3.csv,3,/path/to/sequencer/output3
 An [example samplesheet](../assets/inputs/flowcell_input.csv) has been provided with the pipeline.
 
 Note `run_dir` must lead to a `tar.gz` for compatability with the demultiplexers sgdemux and fqtk
-Please see the example provided for formatting `SampleSheet.csv` for [sgdemux](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/out.sample_meta.csv), and [fqtk](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/
+
+Please see the example provided for formatting `SampleSheet.csv` for [sgdemux](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/out.sample_meta.csv), and [fqtk](https://github.com/nf-core/test-datasets/blob/demultiplex/testdata/sim-data/fqtk_sample_metadata_subset.tsv)
 
 ### Samplesheet for fqtk
 
