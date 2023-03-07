@@ -44,7 +44,7 @@ nextflow_pipeline {
             assert new File("$outputDir/test/s19_1.fastp.fastq.gz").exists()
             assert new File("$outputDir/test/s19_2.fastp.fastq.gz").exists()
             assert new File("$outputDir/test/s1_1.fastp.fastq.gz").exists()
-            assert new File("$outputDir/test/s1_2.fastp.fastq.gz").exists()    
+            assert new File("$outputDir/test/s1_2.fastp.fastq.gz").exists()
             assert new File("$outputDir/test/s20_1.fastp.fastq.gz").exists()
             assert new File("$outputDir/test/s20_2.fastp.fastq.gz").exists()
             assert new File("$outputDir/test/s21_1.fastp.fastq.gz").exists()
