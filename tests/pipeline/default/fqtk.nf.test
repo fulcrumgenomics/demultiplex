@@ -15,7 +15,7 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
-            assert workflow.trace.succeeded().size() == 104
+            assert workflow.trace.succeeded().size() == 105
 
             assert snapshot(
                 path("$outputDir/test/demux-metrics.txt"),

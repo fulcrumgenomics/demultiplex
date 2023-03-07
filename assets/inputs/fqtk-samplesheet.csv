@@ -1,2 +1,2 @@
 id,samplesheet,lane,flowcell,per_flowcell_manifest
-test,https://github.com/fulcrumgenomics/nf-core-test-datasets/raw/fqtk/testdata/sim-data/fqtk_samplesheet.tsv,,https://github.com/nf-core/test-datasets/raw/demultiplex/testdata/sim-data/fastq.tar.gz,https://raw.githubusercontent.com/fulcrumgenomics/nf-core-test-datasets/fqtk/testdata/sim-data/per_flowcell_manifest.csv
+test,https://github.com/fulcrumgenomics/nf-core-test-datasets/raw/fqtk/testdata/sim-data/fqtk_samplesheet.csv,,https://github.com/nf-core/test-datasets/raw/demultiplex/testdata/sim-data/fastq.tar.gz,https://raw.githubusercontent.com/fulcrumgenomics/nf-core-test-datasets/fqtk/testdata/sim-data/per_flowcell_manifest.csv

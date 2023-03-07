@@ -399,7 +399,7 @@ def extract_csv_fqtk(input_csv) {
             ],
             'samplesheet': [
                 'content': 'path',
-                'pattern': '^.*.tsv$',
+                'pattern': '^.*.csv$',
             ],
             'lane': [
                 'content': 'meta',

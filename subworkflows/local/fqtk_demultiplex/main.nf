@@ -4,7 +4,8 @@
 // Demultiplex Singular Genomics bases data using sgdemux
 //
 
-include { FQTK } from "../../../modules/nf-core/fqtk/main"
+include { FQTK }  from "../../../modules/nf-core/fqtk/main"
+include {CSV2TSV} from "../../../modules/local/csv2tsv"
 
 workflow FQTK_DEMULTIPLEX {
     take:
@@ -14,10 +15,11 @@ workflow FQTK_DEMULTIPLEX {
         ch_input     // [[id:"", lane:""],samplesheet.csv, path/to/fastq/files]
 
     main:
+        // Convert csv to tsv
+        CSV2TSV( ch_input )
         
         // MODULE: fqtk
-        // Demultiplex the bases files
-        FQTK( ch_input )
+        FQTK( CSV2TSV.out.ch_output )
 
         // Generate meta for each fastq
         ch_fastq_with_meta = generate_fastq_meta(FQTK.out.sample_fastq)
