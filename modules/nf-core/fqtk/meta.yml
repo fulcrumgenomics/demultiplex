@@ -21,10 +21,6 @@ input:
       type: file
       description: Tsv file, with two columns sample_id and barcode
       pattern: "*.{tsv}"
-  - read_structure_manifest:
-      type: file
-      description: Csv file mapping fastq file names to read structures - necessary headers fastq and read_structure
-      pattern: "*.{csv}"
   - fastq_readstructure_pairs:
       type: list
       description: List of lists i.e. [[<fastq file name>, <read structure>, <absolute path to fastq directory>],...]

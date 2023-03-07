@@ -1,6 +1,6 @@
 process FQTK {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
     conda "bioconda::fqtk=0.2.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -32,14 +32,13 @@ process FQTK {
     read_structures = fastq_readstructure_pairs.collect{it[1]}.join(" ")
 
     """
-    sed 's/,/\t/g' ${sample_sheet} > sample_sheet.tsv
     mkdir output
     fqtk \\
         demux \\
             --inputs ${fastqs} \\
             --read-structures ${read_structures} \\
             --output output/ \\
-            --sample-metadata sample_sheet.tsv \\
+            --sample-metadata ${sample_sheet} \\
             ${args}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -12,7 +12,7 @@
                     },
                     "bcl2fastq": {
                         "branch": "master",
-                        "git_sha": "100f641b272ff7e309bfbb86d0c3f63d7b6c6a9b",
+                        "git_sha": "25a16e73cf91cd3fdfa0193b1e6f48eb5d3e50a3",
                         "installed_by": ["bcl_demultiplex"]
                     },
                     "bclconvert": {
@@ -35,11 +35,11 @@
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
                         "installed_by": ["modules"]
                     },
-                    // "fqtk": {
-                    //     "branch": "master",
-                    //     "git_sha": "",
-                    //     "installed_by": ["modules"]
-                    // },
+                    "fqtk": {
+                        "branch": "master",
+                        "git_sha": "c3e177f0cd1ad539d5184a7bcc22f51605d897d1",
+                        "installed_by": ["modules"]
+                    },
                     "md5sum": {
                         "branch": "master",
                         "git_sha": "c8e35eb2055c099720a75538d1b8adb3fb5a464c",
