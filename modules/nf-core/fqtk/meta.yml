@@ -29,7 +29,6 @@ input:
       type: list
       description: List of lists i.e. [[<fastq file name>, <read structure>, <absolute path to fastq directory>],...]
 
-
 output:
   - meta:
       type: map
