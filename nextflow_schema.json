@@ -18,8 +18,7 @@
                 },
                 "skip_tools": {
                     "type": "string",
-                    "default": null,
-                    "description": "Skip trimming"
+                    "default": "None"
                 }
             }
         },
