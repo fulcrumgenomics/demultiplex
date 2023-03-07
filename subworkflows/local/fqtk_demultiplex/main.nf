@@ -12,7 +12,7 @@ workflow FQTK_DEMULTIPLEX {
         // Input fastq's must be bgzipped for compatibility with sgdemux
         // samplesheet.csv must be a two column csv = Sample_Barcode,Sample_ID)
         //TODO fix name custom_input
-        ch_input     // [[id:"", lane:""],samplesheet.csv, path/to/fastq/files]
+        ch_input     // [[id:"", lane:""],samplesheet.csv, [[fastq_name, read_structure, fastq_dir]]]
 
     main:
         // Convert csv to tsv
